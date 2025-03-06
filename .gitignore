@@ -1,0 +1,10 @@
+# .gitignore:
+
+.env_backend
+.env
+db.sqlite3
+draft.txt
+
+
+__pycache__/
+*_initial.py

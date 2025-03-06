@@ -1,0 +1,45 @@
+# docker-compose.yml:
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: [ "sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000" ]
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DB_TYPE=${DB_TYPE}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_PATH=${DB_PATH}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+
+  sqlite:
+    image: alpine
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    command: [ "sh", "-c", "echo SQLite service running" ]
+    environment:
+      - DB_PATH=${DB_PATH}
+
+volumes:
+  postgres_data:
