@@ -1,6 +1,7 @@
 # .gitignore:
 
-.env_backend
+\.env_backend
+\logs
 .env
 db.sqlite3
 draft.txt

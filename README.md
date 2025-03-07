@@ -2,7 +2,8 @@
 
 # first commit 
 ## v0.0.1
-DONE Базовые (конфигурации, CRUD):
+Stage1
+Базовые (конфигурации, CRUD):
 - basic CRUD(User, Organization, Branch, Relation)
 - Configurations{
     - .gitignore
@@ -10,4 +11,5 @@ DONE Базовые (конфигурации, CRUD):
     - scripts.py
     - requirements.txt
     - .bat
+    - docker
 }

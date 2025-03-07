@@ -1,25 +1,35 @@
 Plan:
 
-DONE Базовые (конфигурации, CRUD)
-TODO Управление пользователями
-TODO Аутентификация и безопасность
-TODO Email Notifications
-TODO Интернационализация и локализация
-TODO Документация API и его спецификация
-TODO Админ-панель Jet
-TODO Работа с транзакциями
-TODO Оптимизация с Redis
-TODO API Versioning
-TODO Middleware
-TODO Django Guardian
-TODO Асинхронная обработка задач
-TODO Качество и отладка
-TODO Интеграция внешних сервисов
-TODO Обеспечение безопасности приложения
-TODO Реал-тайм функциональность
-TODO Интеграция с NoSQL
-TODO Телеграм бот
-TODO Интеграция с Elasticsearch
-TODO Docker и контейнеризация
-TODO CI/CD Basics
-TODO Микросервисы с gRPC
+DONE:
+    Базовые (конфигурации, CRUD)
+
+
+DOING:
+    Управление пользователями
+
+
+TODO:
+    Аутентификация и безопасность
+    Email Notifications
+    Push Notifications(Cross-platform)
+    Интернационализация и локализация
+    Документация API и его спецификация
+    Админ-панель Jet
+    Работа с транзакциями
+    Оптимизация с Redis
+    API Versioning
+    Middleware
+    Django Guardian
+    Асинхронная обработка задач
+    Качество и отладка
+    Интеграция внешних сервисов
+    Обеспечение безопасности приложения
+    Реал-тайм функциональность
+    Интеграция с NoSQL
+    Телеграм бот
+    Интеграция с Elasticsearch
+    Docker и контейнеризация
+    CI/CD Basics
+    Микросервисы с gRPC
+    GraphQL
+    WS

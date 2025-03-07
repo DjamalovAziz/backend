@@ -4,8 +4,8 @@ import os
 
 # Конфигурация
 CONFIG = {
-    "target_dirs": {"backend"},  # Множество целевых директорий
-    "exclude_list": {".env_backend", "__init__.py"},  # Множество исключений
+    "target_dirs": {"backend"},
+    "exclude_list": {".env_backend", "__init__.py"},
 }
 
 
@@ -54,15 +54,12 @@ def add_file_path_comments(root_dir):
                 print(f"Целевая директория {target_path} не найдена")
                 continue
 
-            # Рекурсивно обходим файлы в target_dir
             for dirpath, dirnames, filenames in os.walk(target_path):
                 relative_dir = os.path.relpath(dirpath, root_dir)
-                # Проверяем директорию на исключение
                 if any(excluded in relative_dir for excluded in CONFIG["exclude_list"]):
                     continue
 
                 for filename in filenames:
-                    # Пропускаем файлы из exclude_list
                     if filename in CONFIG["exclude_list"]:
                         continue
 
@@ -70,7 +67,6 @@ def add_file_path_comments(root_dir):
                         full_path = os.path.join(dirpath, filename)
                         relative_path = os.path.relpath(full_path, root_dir)
 
-                        # Проверяем полный путь на исключение
                         if any(
                             excluded in relative_path
                             for excluded in CONFIG["exclude_list"]
@@ -79,7 +75,6 @@ def add_file_path_comments(root_dir):
 
                         comment = f"# {relative_path}:\n\n"
 
-                        # Читаем файл
                         try:
                             with open(full_path, "r", encoding="utf-8") as file:
                                 content = file.read()
@@ -87,9 +82,7 @@ def add_file_path_comments(root_dir):
                             print(f"Ошибка чтения файла {relative_path}: {e}")
                             continue
 
-                        # Проверяем, есть ли уже такой комментарий
                         if not content.startswith(comment):
-                            # Пишем новый контент
                             try:
                                 with open(full_path, "w", encoding="utf-8") as file:
                                     file.write(comment + content)
@@ -105,12 +98,10 @@ def add_file_path_comments(root_dir):
 
 
 if __name__ == "__main__":
-    project_root = "."  # Текущая директория
+    project_root = "."
 
-    # Вывод текущей конфигурации
     print("\nТекущая конфигурация:")
     print(f"Целевые директории: {CONFIG['target_dirs']}")
     print(f"Исключения: {CONFIG['exclude_list']}\n")
 
-    # Запуск обработки
     add_file_path_comments(project_root)

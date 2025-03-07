@@ -7,6 +7,8 @@ backend
             __init__.py
             asgi.py
             common.py
+            logging_filters.py
+            logging_middleware.py
             settings.py
             urls.py
             wsgi.py
@@ -33,6 +35,8 @@ backend
             urls.py
             views.py
         manage.py
+    \logs
+        backend.log
     .bat
     .env
     .gitignore
