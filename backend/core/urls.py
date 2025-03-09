@@ -1,7 +1,7 @@
 # backend\core\urls.py:
 
 """
-URL configuration for backend project.
+URL configuration for project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -26,7 +26,7 @@ schema_view = get_schema_view(
         title="Backend Project API",
         default_version="v1",
         description="API documentation for backend project",
-        # terms_of_service="https://www.DaITBackend.com/policies/terms/",
+        # terms_of_service="https://www.DaITBackend.com/backend/policies/terms/",
         contact=openapi.Contact(email="djamalov.aziz.mansurovich@gmail.com"),
         license=openapi.License(name="BSD License"),
     ),
@@ -36,15 +36,23 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("management.urls")),
-    path("api/", include("organization.urls")),
     path(
-        "swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="swagger-ui"
+        "api/",
+        include(
+            [
+                path("", include("management.urls")),
+                path("", include("organization.urls")),
+                path("", include("message.urls")),
+            ]
+        ),
     ),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="redoc"),
-    re_path(
-        r"^swagger(?P<format>\.json|\.yaml)$",
-        schema_view.without_ui(cache_timeout=0),
-        name="schema-json",
-    ),
+    # path(
+    #     "swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="swagger-ui"
+    # ),
+    # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="redoc"),
+    # re_path(
+    #     r"^swagger(?P<format>\.json|\.yaml)$",
+    #     schema_view.without_ui(cache_timeout=0),
+    #     name="schema-json",
+    # ),
 ]

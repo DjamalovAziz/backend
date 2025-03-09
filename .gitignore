@@ -5,6 +5,7 @@
 .env
 db.sqlite3
 draft.txt
+plan.md
 
 
 __pycache__/

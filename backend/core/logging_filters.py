@@ -1,18 +1,12 @@
 # backend\core\logging_filters.py:
 
+
 import logging
-from django.utils.timezone import now
 
 
 class RequestInfoFilter(logging.Filter):
     """
-    Filter that adds request-related information to logs:
-    - HTTP method
-    - Status code
-    - Path
-    - Remote address (IP)
-    - User agent
-    - User info
+    Filter that adds request-related information to logs
     """
 
     def filter(self, record):
@@ -23,11 +17,14 @@ class RequestInfoFilter(logging.Filter):
         record.ua = "-"
         record.user = "anonymous"
 
+        # Устанавливаем значение по умолчанию
+        if not hasattr(record, "duration_ms"):
+            record.duration_ms = "-"
+
         request = getattr(record, "request", None)
 
         if request and hasattr(request, "path"):
             record.method = getattr(request, "method", "-")
-
             record.path = request.path
 
             x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")

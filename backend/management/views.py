@@ -6,13 +6,23 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.hashers import check_password, make_password
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenRefreshView
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.exceptions import TokenError
 
 #
-from management.permissions import IsOwnerOrReadOnly
+from management.permissions import IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly
 from .models import Relation, User
-from .serializers import RelationSerializer, UserSerializer, ChangePasswordSerializer
+from .serializers import (
+    RelationSerializer,
+    UserSerializer,
+    ChangePasswordSerializer,
+    LogoutSerializer,
+    SignupSerializer,
+    SigninSerializer,
+)
 
 
 # ~~~~~~~~~~~~~~~~~~~~ User ~~~~~~~~~~~~~~~~~~~~
@@ -53,22 +63,12 @@ class ChangePasswordView(APIView):
         )
 
 
-# views.py
-from rest_framework_simplejwt.views import TokenRefreshView
-
-
-# Встроенный класс уже достаточно безопасен, но мы можем переопределить при необходимости
 class CustomTokenRefreshView(TokenRefreshView):
     """
     Обновление токена. Использует встроенный функционал SimpleJWT.
     """
 
     pass
-
-
-from .serializers import LogoutSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
 
 
 class LogoutView(APIView):
@@ -94,30 +94,13 @@ class LogoutView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# views.py
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import SignupSerializer
-
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
-from .serializers import SignupSerializer
-
-
 class SignupView(APIView):
     @swagger_auto_schema(request_body=SignupSerializer)
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            # Создаем пользователя
             user = serializer.save()
 
-            # Генерация токенов для нового пользователя
             refresh = RefreshToken.for_user(user)
 
             return Response(
@@ -131,15 +114,6 @@ class SignupView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SigninSerializer
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
-
-
 class SigninView(APIView):
     @swagger_auto_schema(request_body=SigninSerializer)
     def post(self, request):
@@ -148,7 +122,6 @@ class SigninView(APIView):
             email = serializer.validated_data["email"]
             password = serializer.validated_data["password"]
 
-            # Аутентификация пользователя
             user = authenticate(email=email, password=password)
             if user is None:
                 return Response(
@@ -156,7 +129,6 @@ class SigninView(APIView):
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
-            # Генерация токенов только в случае успешной аутентификации
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
@@ -169,28 +141,32 @@ class SigninView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from rest_framework import viewsets
-from .models import User
-from .serializers import UserSerializer
-from .permissions import IsOwnerOrReadOnly
-from rest_framework.permissions import IsAuthenticated
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    def get_permissions(self):
+        """
+        Переопределяем разрешения в зависимости от метода:
+        - GET-запросы доступны всем
+        - Для опасных операций (PUT, PATCH, DELETE) нужны особые разрешения
+        """
+        if self.action in ["update", "partial_update", "destroy"]:
+            permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+        else:
+            permission_classes = [IsAuthenticatedOrReadOnly]
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        if not self.request.user.is_authenticated:
-            return queryset
-        return queryset.filter(pk=self.request.user.pk)
-
-    def get_object(self):
-        if self.request.method == "POST":
-            return self.request.user
-        return super().get_object()
+        """
+        Для неаутентифицированных пользователей возвращаем ограниченную информацию,
+        для аутентифицированных - только их собственную информацию
+        """
+        queryset = User.objects.all()
+        if self.request.user.is_authenticated:
+            return queryset.filter(pk=self.request.user.pk)
+        return queryset
 
 
 # ~~~~~~~~~~~~~~~~~~~~ Relation ~~~~~~~~~~~~~~~~~~~~
@@ -199,3 +175,4 @@ class UserViewSet(viewsets.ModelViewSet):
 class RelationViewSet(viewsets.ModelViewSet):
     queryset = Relation.objects.all()
     serializer_class = RelationSerializer
+    permission_classes = [IsAuthenticated]

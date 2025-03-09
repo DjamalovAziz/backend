@@ -28,3 +28,15 @@ class Branch(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.organization}"
+
+
+# ~~~~~~~~~~~~~~~~~~~~ TelegramGroup ~~~~~~~~~~~~~~~~~~~~
+class TelegramGroup(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    group_id = models.CharField(unique=True, max_length=100)
+
+    name = models.CharField(max_length=100)
+
+    organization_id = models.CharField(max_length=100)
+    branch_id = models.CharField(max_length=100)

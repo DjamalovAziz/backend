@@ -15,3 +15,14 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # Разрешить изменение объекта только его владельцу
         return obj == request.user
+
+
+class IsAuthenticatedOrReadOnly(permissions.BasePermission):
+    """
+    Разрешает GET-запросы всем пользователям, но требует аутентификацию для других методов.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:  # GET, HEAD, OPTIONS
+            return True
+        return request.user and request.user.is_authenticated

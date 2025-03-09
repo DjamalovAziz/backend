@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 from datetime import timedelta
-import logging
 
 #
 
@@ -58,6 +57,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     #
     "management",
+    "message",
     "organization",
 ]
 
@@ -119,7 +119,7 @@ match DB_TYPE:
             }
         }
     case _:
-        raise ValueError("Invalid DB_TYPE. Use 'sqlite' or 'postgres'.")
+        raise ValueError("Invalid DB_TYPE.")
 
 
 # Password validation
@@ -183,9 +183,23 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = "management.User"
 
+# Email configuration
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST")  # например, 'smtp.gmail.com'
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))  # обычно 587 для TLS
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")  # ваш email
+EMAIL_HOST_PASSWORD = os.getenv(
+    "EMAIL_HOST_PASSWORD"
+)  # пароль от почты или app password
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")  # email отправителя по умолчанию
+SERVER_EMAIL = os.getenv("SERVER_EMAIL")  # email для отправки админских сообщений
 
-# backend\core\settings.py:
-...
+# Admin recipients
+ADMINS = [
+    ("Admin Name", os.getenv("ADMIN_EMAIL", EMAIL_HOST_USER)),
+]
+
 # LOGGING
 LOG_DIR = BASE_DIR / ".." / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -196,7 +210,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
-            "format": "{asctime} {levelname} {module} {message} {path} {remote_addr} {ua} {user}",
+            "format": "{asctime} {levelname} {duration_ms}ms {module} {message} {path} {remote_addr} {user} {ua}",
             "style": "{",
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
@@ -219,13 +233,13 @@ LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
             "formatter": "verbose",
             "filters": ["add_request_info"],
         },
         "file": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.FileHandler",
             "filename": LOG_DIR / "backend.log",
             "formatter": "verbose",
@@ -239,35 +253,20 @@ LOGGING = {
         },
     },
     "loggers": {
+        # Отключаем все ненужные логгеры, оставляя только ваш основной
         "django": {
             "handlers": ["console", "file"],
             "level": "INFO",
-            "propagate": True,
-        },
-        "django.request": {
-            "handlers": ["console", "file", "mail_admins"],
-            "level": "WARNING",
             "propagate": False,
         },
         "django.server": {
-            "handlers": ["console", "file"],
-            "level": "INFO",
-            "propagate": False,
-            "filters": ["add_request_info"],
-        },
-        "django.template": {
-            "handlers": ["console", "file"],
+            "handlers": [],  # Пустой список означает, что логи не будут обрабатываться
             "level": "WARNING",
             "propagate": False,
         },
-        "django.db.backends": {
-            "handlers": ["console", "file"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "django.security": {
-            "handlers": ["console", "file", "mail_admins"],
-            "level": "WARNING",
+        "django.request": {
+            "handlers": ["mail_admins"],
+            "level": "ERROR",
             "propagate": False,
         },
     },

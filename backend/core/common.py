@@ -1,5 +1,3 @@
-# backend\core\common.py:
-
 from django.db import models
 
 

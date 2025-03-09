@@ -19,14 +19,10 @@ router.register(r"users", UserViewSet)
 router.register(r"relations", RelationViewSet)
 
 urlpatterns = [
-    path("users/signup/", SignupView.as_view(), name="signup"),  # Регистрация
-    path("users/signin/", SigninView.as_view(), name="signin"),  # Вход
-    path(
-        "users/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"
-    ),  # Обновление токена
-    path(
-        "users/logout/", LogoutView.as_view(), name="logout"
-    ),  # Выход с черным списком токенов
+    path("users/signup/", SignupView.as_view(), name="signup"),
+    path("users/signin/", SigninView.as_view(), name="signin"),
+    path("users/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
+    path("users/logout/", LogoutView.as_view(), name="logout"),
     path("", include(router.urls)),
     path(
         "users/<uuid:pk>/change-password/",

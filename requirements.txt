@@ -6,6 +6,7 @@ Django==5.1.6
 djangorestframework==3.15.2
 djangorestframework_simplejwt==5.5.0
 drf-yasg==1.21.9
+h11==0.14.0
 inflection==0.5.1
 mypy-extensions==1.0.0
 packaging==24.2
@@ -19,3 +20,4 @@ PyYAML==6.0.2
 sqlparse==0.5.3
 tzdata==2025.1
 uritemplate==4.1.1
+uvicorn==0.34.0

@@ -1,9 +1,9 @@
 <!-- README.md -->
 
 ## v0.0.2
-Logging
-Edited docker
-fixed bugs
+- Logging
+- Edited docker
+- fixed bugs
 
 # first commit 
 ## v0.0.1

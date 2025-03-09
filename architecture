@@ -46,6 +46,7 @@ backend
     docker-compose.yml
     Dockerfile
     draft.txt
+    plan.md
     README.md
     requirements.txt
     scripts.py

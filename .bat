@@ -20,6 +20,8 @@ python manage.py migrate
 
 python manage.py runserver
 
+@REM uvicorn core.asgi:application --host 0.0.0.0 --port 8000
+
 popd
 
 pause

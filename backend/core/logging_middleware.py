@@ -3,6 +3,7 @@
 import logging
 import time
 
+# Используем логгер django, так как вы его используете в выводе
 logger = logging.getLogger("django")
 
 
@@ -24,12 +25,14 @@ class RequestLoggingMiddleware:
         status_code = getattr(response, "status_code", "-")
         method = getattr(request, "method", "-")
 
+        # Важное изменение: явно передаем duration_ms как отдельное поле
+        # вместо добавления в message
         logger.info(
             f"{method} {status_code}",
             extra={
                 "request": request,
                 "response": response,
-                "duration_ms": duration,
+                "duration_ms": duration,  # Это значение должно быть целым числом
             },
         )
 
