@@ -12,7 +12,7 @@ backend
             settings.py
             urls.py
             wsgi.py
-        \management
+        \user
             \migrations
                 __init__.py
             __init__.py

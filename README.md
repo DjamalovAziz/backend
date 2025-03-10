@@ -1,5 +1,12 @@
 <!-- README.md -->
 
+## v0.0.3
+- optimized
+- realized basic template for user
+- added api docs spectrual
+- cors
+- 
+
 ## v0.0.2
 - Logging
 - Edited docker

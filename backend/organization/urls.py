@@ -3,12 +3,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-#
-from .views import BranchViewSet, OrganizationViewSet
+from .views import OrganizationViewSet, BranchViewSet, RelationViewSet
 
 router = DefaultRouter()
-router.register(r"organizations", OrganizationViewSet)
-router.register(r"branchs", BranchViewSet)
+router.register("organizations", OrganizationViewSet)
+router.register("branches", BranchViewSet)
+router.register("relations", RelationViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

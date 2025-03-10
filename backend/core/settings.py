@@ -52,18 +52,19 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     #
     "rest_framework",
-    "drf_yasg",
     "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",
+    "drf_yasg",
+    "drf_spectacular",
     #
-    "management",
-    "message",
+    "user",
     "organization",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -157,45 +158,53 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Cutom user model
+AUTH_USER_MODEL = "user.User"
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    #
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+# JWT settings
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": True,
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "uuid",
-    "USER_ID_CLAIM": "user_uuid",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
 }
 
-AUTH_USER_MODEL = "management.User"
 
 # Email configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST")  # например, 'smtp.gmail.com'
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))  # обычно 587 для TLS
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")  # ваш email
-EMAIL_HOST_PASSWORD = os.getenv(
-    "EMAIL_HOST_PASSWORD"
-)  # пароль от почты или app password
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")  # email отправителя по умолчанию
-SERVER_EMAIL = os.getenv("SERVER_EMAIL")  # email для отправки админских сообщений
-
-# Admin recipients
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+SERVER_EMAIL = os.getenv("SERVER_EMAIL")
 ADMINS = [
     ("Admin Name", os.getenv("ADMIN_EMAIL", EMAIL_HOST_USER)),
 ]
@@ -270,4 +279,17 @@ LOGGING = {
             "propagate": False,
         },
     },
+}
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+    ","
+)
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Ваше API",
+    "DESCRIPTION": "Описание вашего API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }

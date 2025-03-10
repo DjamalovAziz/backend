@@ -17,7 +17,6 @@ class RequestInfoFilter(logging.Filter):
         record.ua = "-"
         record.user = "anonymous"
 
-        # Устанавливаем значение по умолчанию
         if not hasattr(record, "duration_ms"):
             record.duration_ms = "-"
 

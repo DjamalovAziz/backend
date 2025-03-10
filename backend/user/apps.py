@@ -1,8 +1,8 @@
-# backend\management\apps.py:
+# backend\user\apps.py:
 
 from django.apps import AppConfig
 
 
-class ManagementConfig(AppConfig):
+class UserConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "management"
+    name = "user"

@@ -1,4 +1,4 @@
-# backend\management\tests.py:
+# backend\user\tests.py:
 
 from django.test import TestCase
 
