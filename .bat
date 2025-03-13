@@ -14,11 +14,11 @@ for /r %%i in (*_initial.py) do del /f /q "%%i" 2>nul
 
 taskkill /f /im python.exe >nul 2>&1
 
-python manage.py makemigrations
+@REM python manage.py makemigrations
 
-python manage.py migrate
+@REM python manage.py migrate
 
-python manage.py runserver
+@REM python manage.py runserver
 
 @REM uvicorn core.asgi:application --host 0.0.0.0 --port 8000
 

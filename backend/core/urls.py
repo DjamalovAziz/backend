@@ -5,54 +5,25 @@ URL configuration for project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
-from django.urls import path, include, re_path
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-from rest_framework import permissions
+from django.urls import path, include
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-
-schema_view = get_schema_view(
-    openapi.Info(
-        title="Backend Project API",
-        default_version="v1",
-        description="API documentation for backend project",
-        # terms_of_service="https://www.DaITBackend.com/backend/policies/terms/",
-        contact=openapi.Contact(email="djamalov.aziz.mansurovich@gmail.com"),
-        license=openapi.License(name="BSD License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
+from django.views.generic import TemplateView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/user/", include("user.urls")),
-    path("api/", include("organization.urls")),
-    # Swagger documentation
-    # path(
-    #     "swagger/",
-    #     schema_view.with_ui("swagger", cache_timeout=0),
-    #     name="schema-swagger-ui",
-    # ),
-    # path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
-    #
-    # Схема OpenAPI (необходима как основа)
+    path("api/organization/", include("organization.urls")),
+    path("api/message/", include("message.urls")),
+    # Схема OpenAPI
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Документация Swagger
     path(
@@ -62,4 +33,16 @@ urlpatterns = [
     ),
     # Альтернативная документация Redoc
     path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    # RapiDoc UI
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/rapidoc/",
+        TemplateView.as_view(
+            template_name="rapidoc.html", extra_context={"schema_url": "schema"}
+        ),
+        name="rapidoc",
+    ),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

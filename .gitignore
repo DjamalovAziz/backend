@@ -1,10 +1,12 @@
 # .gitignore:
 
 \.env_backend
+\.vscode
 \logs
 .env
 db.sqlite3
 draft.txt
+code.py
 plan.md
 
 

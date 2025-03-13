@@ -7,12 +7,14 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 #
 from .models import User
 
-# ~~~~~~~~~~~~~~~~~~~~ User ~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~ USER ~~~~~~~~~~~~~~~~~~~~
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -22,8 +24,12 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone_number",
+            "avatar_url",
         )
-        read_only_fields = ("uuid",)
+        read_only_fields = ("uuid", "avatar_url")
+
+    def get_avatar_url(self, obj):
+        return obj.get_avatar_url()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -44,6 +50,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone_number",
+            "avatar",
         )
         extra_kwargs = {
             "first_name": {"required": True},
@@ -85,3 +92,18 @@ class ChangePasswordSerializer(serializers.Serializer):
                 {"new_password": "Password fields didn't match."}
             )
         return attrs
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "avatar",
+        )  # Only allow updating these fields

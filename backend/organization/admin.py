@@ -44,7 +44,7 @@ class RelationAdmin(admin.ModelAdmin):
         "created_at",
     )
     list_filter = ("user_role", "relation_type", "created_at")
-    search_fields = ("user__email", "organization__name", "branch__name")
+    search_fields = ("user__email", "user_username" "organization__name", "branch__name")
     readonly_fields = ("uuid", "created_at", "updated_at")
     fieldsets = (
         (None, {"fields": ("uuid", "user", "organization", "branch")}),

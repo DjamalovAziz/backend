@@ -1,62 +1,123 @@
-# backend\user\views.py:
-
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from .permissions import IsOwnerOrReadOnly
 from .serializers import (
     UserSerializer,
     UserCreateSerializer,
-    CustomTokenObtainPairSerializer,
     ChangePasswordSerializer,
+    UserUpdateSerializer,
+    CustomTokenObtainPairSerializer,
 )
 
 User = get_user_model()
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.GenericViewSet):
     queryset = User.objects.all()
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action == "create":
+        if self.action == "register":
             return UserCreateSerializer
+        elif self.action == "update_profile":
+            return UserUpdateSerializer
+        elif self.action == "change_password":
+            return ChangePasswordSerializer
         return UserSerializer
 
-    def get_permissions(self):
-        # Allow unauthenticated users to create a new account
-        if self.action == "create":
-            return [AllowAny()]
-        # Allow any user to perform GET requests (list and retrieve)
-        elif self.action in ["list", "retrieve"] or self.request.method == "GET":
-            return [AllowAny()]
-        return super().get_permissions()
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def register(self, request):
+        """Регистрация нового пользователя"""
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
-    def change_password(self, request, pk=None):
-        user = self.get_object()
-        serializer = ChangePasswordSerializer(data=request.data)
+        # Генерируем токены для нового пользователя
+        refresh = RefreshToken.for_user(user)
 
-        if serializer.is_valid():
-            # Check if old password is correct
-            if not user.check_password(serializer.validated_data["old_password"]):
-                return Response(
-                    {"old_password": ["Wrong password."]},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        response_data = {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": UserSerializer(user).data,
+        }
 
-            # Set new password
-            user.set_password(serializer.validated_data["new_password"])
-            user.save()
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
+    def public_list(self, request):
+        """Получение списка пользователей (базовая публичная информация)"""
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], permission_classes=[AllowAny])
+    def public_profile(self, request, pk=None):
+        """Получение публичной информации о конкретном пользователе"""
+        try:
+            user = User.objects.get(pk=pk)
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+        except User.DoesNotExist:
             return Response(
-                {"message": "Password updated successfully."}, status=status.HTTP_200_OK
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def profile(self, request):
+        """Получение полного профиля текущего пользователя"""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["patch"], permission_classes=[IsAuthenticated])
+    def update_profile(self, request):
+        """Обновление данных текущего пользователя"""
+        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(UserSerializer(request.user).data)
+
+    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    def change_password(self, request):
+        """Изменение пароля текущего пользователя"""
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.check_password(serializer.validated_data["old_password"]):
+            return Response(
+                {"old_password": ["Неверный пароль."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save()
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "message": "Пароль успешно изменен.",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }
+        )
+
+    @action(detail=False, methods=["delete"], permission_classes=[IsAuthenticated])
+    def remove_avatar(self, request):
+        """Удаление аватара текущего пользователя"""
+        user = request.user
+        if user.avatar:
+            user.avatar.delete(save=True)
+            return Response({"message": "Аватар успешно удален."})
+        return Response(
+            {"message": "Нет аватара для удаления."}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

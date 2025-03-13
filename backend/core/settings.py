@@ -18,13 +18,32 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
-#
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Email configuration
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+SERVER_EMAIL = os.getenv("SERVER_EMAIL")
+ADMINS = [
+    ("Admin Name", os.getenv("ADMIN_EMAIL", EMAIL_HOST_USER)),
+]
+
+# Telegram bot settings
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+# Twilio settings for SMS
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -39,7 +58,6 @@ if not SECRET_KEY:
 DEBUG = os.getenv("DEBUG") == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
-
 
 # Application definition
 
@@ -57,8 +75,9 @@ INSTALLED_APPS = [
     "drf_yasg",
     "drf_spectacular",
     #
-    "user",
+    "message",
     "organization",
+    "user",
 ]
 
 MIDDLEWARE = [
@@ -79,7 +98,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "core", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -91,6 +110,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = "core.wsgi.application"
 
@@ -195,20 +215,6 @@ SIMPLE_JWT = {
     "TOKEN_TYPE_CLAIM": "token_type",
 }
 
-
-# Email configuration
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-SERVER_EMAIL = os.getenv("SERVER_EMAIL")
-ADMINS = [
-    ("Admin Name", os.getenv("ADMIN_EMAIL", EMAIL_HOST_USER)),
-]
-
 # LOGGING
 LOG_DIR = BASE_DIR / ".." / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -262,14 +268,13 @@ LOGGING = {
         },
     },
     "loggers": {
-        # Отключаем все ненужные логгеры, оставляя только ваш основной
         "django": {
             "handlers": ["console", "file"],
             "level": "INFO",
             "propagate": False,
         },
         "django.server": {
-            "handlers": [],  # Пустой список означает, что логи не будут обрабатываться
+            "handlers": [],
             "level": "WARNING",
             "propagate": False,
         },
@@ -287,9 +292,29 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"
     ","
 )
 
+# Настройки для drf-spectacular (если используется)
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Ваше API",
-    "DESCRIPTION": "Описание вашего API",
+    "TITLE": "Your API",
+    "DESCRIPTION": "Your API description",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "EXTENSIONS": [
+        "user.schema.ImageFieldFix",  # Добавить расширение для ImageField
+    ],
 }
+
+# Если используется drf-yasg, добавьте:
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    },
+    "USE_SESSION_AUTH": False,
+}
+
+# Media files configuration
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Maximum upload size (5MB)
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024

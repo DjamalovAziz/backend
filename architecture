@@ -4,6 +4,8 @@ backend
     \.env_backend
     \backend
         \core
+            \templates
+                rapidoc.html
             __init__.py
             asgi.py
             common.py
@@ -12,7 +14,26 @@ backend
             settings.py
             urls.py
             wsgi.py
-        \user
+        \management
+            \commands
+                __init__.py
+                run_telegram_bot.py
+            __init__.py
+        \message
+            \migrations
+                __init__.py
+            __init__.py
+            admin.py
+            apps.py
+            models.py
+            serializers.py
+            signals.py
+            tasks.py
+            telegram_bot.py
+            tests.py
+            urls.py
+            views.py
+        \organization
             \migrations
                 __init__.py
             __init__.py
@@ -24,12 +45,15 @@ backend
             tests.py
             urls.py
             views.py
-        \organization
+        \user
             \migrations
                 __init__.py
             __init__.py
             admin.py
+            apps.py
             models.py
+            permissions.py
+            schema.py
             serializers.py
             tests.py
             urls.py
@@ -46,6 +70,7 @@ backend
     docker-compose.yml
     Dockerfile
     draft.txt
+    code.py
     plan.md
     README.md
     requirements.txt

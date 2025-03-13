@@ -18,43 +18,9 @@ from .serializers import (
     RelationResponseSerializer,
 )
 from core.common import UserRole, RelationType
+from .permissions import IsOwnerOrAdmin
 
-
-class IsOwnerOrAdmin(permissions.BasePermission):
-    """
-    Permission to check if the user is the owner of the object or has admin rights.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        # Allow read permissions for all users
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Check if the user created this object
-        if hasattr(obj, "created_by") and obj.created_by == request.user:
-            return True
-
-        # For organizations, check if the user is the organization owner
-        if isinstance(obj, Organization):
-            return Relation.objects.filter(
-                organization=obj,
-                user=request.user,
-                user_role=UserRole.ORGANIZATION_OWNER,
-                relation_type=RelationType.RELATION,
-            ).exists()
-
-        # For branches, check if the user is the branch manager or organization owner
-        if isinstance(obj, Branch):
-            return Relation.objects.filter(
-                Q(branch=obj, user_role=UserRole.BRANCH_MANAGER)
-                | Q(
-                    organization=obj.organization, user_role=UserRole.ORGANIZATION_OWNER
-                ),
-                user=request.user,
-                relation_type=RelationType.RELATION,
-            ).exists()
-
-        return False
+# ~~~~~~~~~~~~~~~~~~~~ ORGANIZATION ~~~~~~~~~~~~~~~~~~~~
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -97,31 +63,35 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         serializer = BranchSerializer(branches, many=True)
         return Response(serializer.data)
 
+    @action(
+        detail=True, methods=["get"], permission_classes=[permissions.IsAuthenticated]
+    )
+    def relations(self, request, pk=None):
+        """
+        Получить все связи для организации.
+        Требует аутентификации и соответствующих прав доступа.
+        """
+        organization = self.get_object()
 
-@action(detail=True, methods=["get"], permission_classes=[permissions.IsAuthenticated])
-def relations(self, request, pk=None):
-    """
-    Получить все связи для организации.
-    Требует аутентификации и соответствующих прав доступа.
-    """
-    organization = self.get_object()
+        # Проверка, имеет ли пользователь доступ к отношениям этой организации
+        has_access = Relation.objects.filter(
+            organization=organization,
+            user=request.user,
+            relation_type=RelationType.RELATION,
+        ).exists()
 
-    # Проверка, имеет ли пользователь доступ к отношениям этой организации
-    has_access = Relation.objects.filter(
-        organization=organization,
-        user=request.user,
-        relation_type=RelationType.RELATION,
-    ).exists()
+        if not has_access:
+            return Response(
+                {"detail": "У вас нет прав для просмотра связей этой организации."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
-    if not has_access:
-        return Response(
-            {"detail": "У вас нет прав для просмотра связей этой организации."},
-            status=status.HTTP_403_FORBIDDEN,
-        )
+        relations = Relation.objects.filter(organization=organization)
+        serializer = RelationSerializer(relations, many=True)
+        return Response(serializer.data)
 
-    relations = Relation.objects.filter(organization=organization)
-    serializer = RelationSerializer(relations, many=True)
-    return Response(serializer.data)
+
+# ~~~~~~~~~~~~~~~~~~~~ BRANCH ~~~~~~~~~~~~~~~~~~~~
 
 
 class BranchViewSet(viewsets.ModelViewSet):
@@ -187,7 +157,9 @@ class BranchViewSet(viewsets.ModelViewSet):
         serializer = RelationSerializer(relations, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"])
+    @action(
+        detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
+    )
     def request_to_join(self, request, pk=None):
         """Allow a user to request joining a branch"""
         branch = self.get_object()
@@ -196,7 +168,6 @@ class BranchViewSet(viewsets.ModelViewSet):
         existing_relation = Relation.objects.filter(
             branch=branch, user=request.user
         ).first()
-
         if existing_relation:
             if existing_relation.relation_type == RelationType.RELATION:
                 return Response(
@@ -259,6 +230,9 @@ class BranchViewSet(viewsets.ModelViewSet):
         )
 
 
+# ~~~~~~~~~~~~~~~~~~~~ RELATION ~~~~~~~~~~~~~~~~~~~~
+
+
 class RelationViewSet(viewsets.ModelViewSet):
     queryset = Relation.objects.all()
     serializer_class = RelationSerializer
@@ -267,39 +241,49 @@ class RelationViewSet(viewsets.ModelViewSet):
     search_fields = ["user__email", "branch__name", "organization__name"]
     ordering_fields = ["created_at", "user_role"]
 
-    # def get_queryset(self):
-    #     """Filter relations based on user role and access rights"""
-    #     user = self.request.user
+    def check_object_permissions(self, request, obj):
+        """
+        Проверка разрешений на уровне объекта для удаления связей:
+        - Пользователь может удалять только свои связи
+        - Organization owner может удалять связи только в своей организации
+        - Branch manager может удалять связи только worker'ов в своей ветке
+        """
+        super().check_object_permissions(request, obj)
 
-    #     # Return only relations that the user has permission to see
-    #     return Relation.objects.filter(
-    #         Q(user=user)  # Их собственные связи
-    #         | Q(
-    #             branch__in=Branch.objects.filter(
-    #                 relations__user=user,
-    #                 relations__user_role__in=[
-    #                     UserRole.BRANCH_MANAGER,
-    #                     UserRole.ORGANIZATION_OWNER,
-    #                 ],
-    #                 relations__relation_type=RelationType.RELATION,
-    #             )
-    #         )  # Филиалы, которыми они управляют
-    #         | Q(
-    #             organization__in=Organization.objects.filter(
-    #                 relations__user=user,
-    #                 relations__user_role=UserRole.ORGANIZATION_OWNER,
-    #                 relations__relation_type=RelationType.RELATION,
-    #             )
-    #         )  # Организации, которыми они владеют
-    #     )
+        if self.action == "destroy":
+            user = request.user
+
+            # Пользователь может удалить только свою собственную связь
+            if obj.user == user:
+                return True
+
+            # Organization owner может удалять связи только в своей организации
+            is_org_owner = Relation.objects.filter(
+                organization=obj.organization,
+                user=user,
+                user_role=UserRole.ORGANIZATION_OWNER,
+                relation_type=RelationType.RELATION,
+            ).exists()
+
+            # Branch manager может удалять только worker'ов в своей ветке
+            is_branch_manager = False
+            if (
+                obj.user_role == UserRole.WORKER
+            ):  # Проверяем, что удаляемая связь принадлежит worker'у
+                is_branch_manager = Relation.objects.filter(
+                    branch=obj.branch,
+                    user=user,
+                    user_role=UserRole.BRANCH_MANAGER,
+                    relation_type=RelationType.RELATION,
+                ).exists()
+
+            if not (is_org_owner or is_branch_manager):
+                raise permissions.PermissionDenied(
+                    "You do not have permission to perform this action."
+                )
 
     def get_queryset(self):
         """Filter relations based on user role and access rights"""
-        # Проверяем, является ли это запросом генерации схемы Swagger
-        if getattr(self, "swagger_fake_view", False):
-            # Возвращаем пустой queryset для документации API
-            return Relation.objects.none()
-
         user = self.request.user
 
         # Return only relations that the user has permission to see
@@ -324,13 +308,44 @@ class RelationViewSet(viewsets.ModelViewSet):
             )  # Организации, которыми они владеют
         )
 
+    # def get_queryset(self):
+    #     """Filter relations based on user role and access rights"""
+    #     # Проверяем, является ли это запросом генерации схемы Swagger
+    #     if getattr(self, "swagger_fake_view", False):
+    #         # Возвращаем пустой queryset для документации API
+    #         return Relation.objects.none()
+
+    #     user = self.request.user
+
+    #     # Return only relations that the user has permission to see
+    #     return Relation.objects.filter(
+    #         Q(user=user)  # Их собственные связи
+    #         | Q(
+    #             branch__in=Branch.objects.filter(
+    #                 relations__user=user,
+    #                 relations__user_role__in=[
+    #                     UserRole.BRANCH_MANAGER,
+    #                     UserRole.ORGANIZATION_OWNER,
+    #                 ],
+    #                 relations__relation_type=RelationType.RELATION,
+    #             )
+    #         )  # Филиалы, которыми они управляют
+    #         | Q(
+    #             organization__in=Organization.objects.filter(
+    #                 relations__user=user,
+    #                 relations__user_role=UserRole.ORGANIZATION_OWNER,
+    #                 relations__relation_type=RelationType.RELATION,
+    #             )
+    #         )  # Организации, которыми они владеют
+    #     )
+
     def get_permissions(self):
         """
         Пользовательская обработка разрешений:
         - Все действия требуют аутентификации
-        - Только пользователи с правами администратора могут обновлять/удалять связи
+        - Обновление связей требует специальных прав
         """
-        if self.action in ["update", "partial_update", "destroy"]:
+        if self.action in ["update", "partial_update"]:
             return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
         return [permissions.IsAuthenticated()]
 

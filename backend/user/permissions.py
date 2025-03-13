@@ -2,6 +2,8 @@
 
 from rest_framework import permissions
 
+# ~~~~~~~~~~~~~~~~~~~~ USER ~~~~~~~~~~~~~~~~~~~~
+
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -15,12 +17,12 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.uuid == request.user.uuid
 
 
-class AllowGetRequests(permissions.BasePermission):
-    """
-    Custom permission to allow GET requests without authentication.
-    """
+# class AllowGetRequests(permissions.BasePermission):
+#     """
+#     Custom permission to allow GET requests without authentication.
+#     """
 
-    def has_permission(self, request, view):
-        if request.method == "GET":
-            return True
-        return request.user and request.user.is_authenticated
+#     def has_permission(self, request, view):
+#         if request.method == "GET":
+#             return True
+#         return request.user and request.user.is_authenticated

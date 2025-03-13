@@ -6,6 +6,7 @@ from .models import Organization, Branch, Relation
 from core.common import UserRole, RelationType
 from user.serializers import UserSerializer
 
+# ~~~~~~~~~~~~~~~~~~~~ ORGANIZATION ~~~~~~~~~~~~~~~~~~~~
 
 class OrganizationSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -22,6 +23,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("uuid", "created_at", "updated_at", "created_by")
 
+# ~~~~~~~~~~~~~~~~~~~~ BRANCH ~~~~~~~~~~~~~~~~~~~~
 
 class BranchSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -49,6 +51,7 @@ class BranchSerializer(serializers.ModelSerializer):
             "organization_name",
         )
 
+# ~~~~~~~~~~~~~~~~~~~~ RELATION ~~~~~~~~~~~~~~~~~~~~
 
 class RelationSerializer(serializers.ModelSerializer):
     user_details = UserSerializer(source="user", read_only=True)
@@ -89,7 +92,7 @@ class RequestToJoinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Relation
-        fields = ("uuid", "branch", "user_role")
+        fields = ("uuid", "user_role")
         read_only_fields = ("uuid",)
 
     def create(self, validated_data):
@@ -124,7 +127,6 @@ class InvitationSerializer(serializers.ModelSerializer):
         read_only_fields = ("uuid",)
 
     def validate(self, attrs):
-        # Check if the user exists
         from django.contrib.auth import get_user_model
 
         User = get_user_model()

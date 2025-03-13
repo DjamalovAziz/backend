@@ -6,13 +6,15 @@ from django.conf import settings
 from core.common import UserRole, RelationType
 
 
+# ~~~~~~~~~~~~~~~~~~~~ ORGANIZATION ~~~~~~~~~~~~~~~~~~~~
+
 class Organization(models.Model):
     """
     Organization model to represent a company or business entity.
     """
 
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -30,6 +32,8 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
+
+# ~~~~~~~~~~~~~~~~~~~~ BRANCH ~~~~~~~~~~~~~~~~~~~~
 
 class Branch(models.Model):
     """
@@ -58,6 +62,7 @@ class Branch(models.Model):
     def __str__(self):
         return f"{self.name} - {self.organization.name}"
 
+# ~~~~~~~~~~~~~~~~~~~~ RELATION ~~~~~~~~~~~~~~~~~~~~
 
 class Relation(models.Model):
     """
