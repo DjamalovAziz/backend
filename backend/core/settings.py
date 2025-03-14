@@ -90,7 +90,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     #
-    "core.logging_middleware.RequestLoggingMiddleware",
+    "utils.logging_middleware.RequestLoggingMiddleware",
 ]
 
 ROOT_URLCONF = "core.urls"
@@ -98,7 +98,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "core", "templates")],
+        "DIRS": [os.path.join(BASE_DIR, "utils", "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -243,7 +243,7 @@ LOGGING = {
             "()": "django.utils.log.RequireDebugFalse",
         },
         "add_request_info": {
-            "()": "core.logging_filters.RequestInfoFilter",
+            "()": "utils.logging_filters.RequestInfoFilter",
         },
     },
     "handlers": {
@@ -292,19 +292,19 @@ CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"
     ","
 )
 
-# Настройки для drf-spectacular (если используется)
+# drf-spectacular
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Your API",
-    "DESCRIPTION": "Your API description",
-    "VERSION": "1.0.0",
+    "TITLE": "backend API",
+    "DESCRIPTION": "backend API",
+    "VERSION": "",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "EXTENSIONS": [
-        "user.schema.ImageFieldFix",  # Добавить расширение для ImageField
+        "utils.schema.ImageFieldFix",
     ],
 }
 
-# Если используется drf-yasg, добавьте:
+# drf-yasg:
 SWAGGER_SETTINGS = {
     "SECURITY_DEFINITIONS": {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
@@ -312,9 +312,9 @@ SWAGGER_SETTINGS = {
     "USE_SESSION_AUTH": False,
 }
 
-# Media files configuration
+# MEDIA
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.path.join(BASE_DIR.parent, "media")
 
 # Maximum upload size (5MB)
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024

@@ -1,4 +1,4 @@
-# backend\core\logging_middleware.py:
+# backend\utils\logging_middleware.py:
 
 import logging
 import time

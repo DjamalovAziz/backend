@@ -1,4 +1,4 @@
-# backend\core\logging_filters.py:
+# backend\utils\logging_filters.py:
 
 
 import logging

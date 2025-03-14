@@ -3,6 +3,7 @@
 \.env_backend
 \.vscode
 \logs
+\media
 .env
 db.sqlite3
 draft.txt

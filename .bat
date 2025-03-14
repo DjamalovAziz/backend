@@ -4,6 +4,8 @@ chcp 65001 > nul
 
 del /f /q db.sqlite3 2>nul
 
+rmdir /s /q media 2>nul
+
 pushd backend
 
 for /f "delims=" %%i in ('dir /ad /s /b ^| findstr /i /e "__pycache__"') do (
@@ -14,11 +16,11 @@ for /r %%i in (*_initial.py) do del /f /q "%%i" 2>nul
 
 taskkill /f /im python.exe >nul 2>&1
 
-@REM python manage.py makemigrations
+python manage.py makemigrations
 
-@REM python manage.py migrate
+python manage.py migrate
 
-@REM python manage.py runserver
+python manage.py runserver
 
 @REM uvicorn core.asgi:application --host 0.0.0.0 --port 8000
 

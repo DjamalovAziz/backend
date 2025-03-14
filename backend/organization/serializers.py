@@ -3,10 +3,11 @@
 from rest_framework import serializers
 from django.db import transaction
 from .models import Organization, Branch, Relation
-from core.common import UserRole, RelationType
+from utils.enamurations import UserRole, RelationType
 from user.serializers import UserSerializer
 
 # ~~~~~~~~~~~~~~~~~~~~ ORGANIZATION ~~~~~~~~~~~~~~~~~~~~
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -23,7 +24,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("uuid", "created_at", "updated_at", "created_by")
 
+
 # ~~~~~~~~~~~~~~~~~~~~ BRANCH ~~~~~~~~~~~~~~~~~~~~
+
 
 class BranchSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -51,7 +54,9 @@ class BranchSerializer(serializers.ModelSerializer):
             "organization_name",
         )
 
+
 # ~~~~~~~~~~~~~~~~~~~~ RELATION ~~~~~~~~~~~~~~~~~~~~
+
 
 class RelationSerializer(serializers.ModelSerializer):
     user_details = UserSerializer(source="user", read_only=True)
@@ -86,10 +91,6 @@ class RelationSerializer(serializers.ModelSerializer):
 
 
 class RequestToJoinSerializer(serializers.ModelSerializer):
-    """
-    Serializer for users requesting to join a branch
-    """
-
     class Meta:
         model = Relation
         fields = ("uuid", "user_role")
@@ -99,10 +100,8 @@ class RequestToJoinSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         branch = validated_data["branch"]
 
-        # Get the organization from the branch
         organization = branch.organization
 
-        # Create a relation with relation_type = REQUEST_TO_JOIN
         relation = Relation.objects.create(
             user=user,
             branch=branch,
@@ -115,11 +114,10 @@ class RequestToJoinSerializer(serializers.ModelSerializer):
 
 
 class InvitationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for organization owners/branch managers to invite users
-    """
-
     email = serializers.EmailField(write_only=True)
+    user_role = serializers.ChoiceField(
+        choices=UserRole.choices, default=UserRole.WORKER
+    )
 
     class Meta:
         model = Relation
@@ -138,6 +136,46 @@ class InvitationSerializer(serializers.ModelSerializer):
                 {"email": "User with this email does not exist."}
             )
 
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            raise serializers.ValidationError("Authenticated user required.")
+        user = request.user
+
+        branch = attrs.get("branch")
+        if not branch or not hasattr(branch, "organization"):
+            raise serializers.ValidationError({"branch": "Invalid branch."})
+
+        requested_role = attrs.get("user_role")
+        current_user_role = (
+            Relation.objects.filter(
+                user=user,
+                organization=branch.organization,
+                relation_type=RelationType.RELATION,
+            )
+            .values_list("user_role", flat=True)
+            .first()
+        )
+
+        if not current_user_role:
+            raise serializers.ValidationError(
+                "You are not related to this organization."
+            )
+
+        if requested_role == UserRole.ORGANIZATION_OWNER:
+            if current_user_role != UserRole.ORGANIZATION_OWNER:
+                raise serializers.ValidationError(
+                    {"user_role": "Only ORGANIZATION_OWNER can assign this role."}
+                )
+        elif current_user_role == UserRole.BRANCH_MANAGER and requested_role not in [
+            UserRole.WORKER,
+            UserRole.BRANCH_MANAGER,
+        ]:
+            raise serializers.ValidationError(
+                {
+                    "user_role": "BRANCH_MANAGER can only assign WORKER or BRANCH_MANAGER roles."
+                }
+            )
+
         return attrs
 
     def create(self, validated_data):
@@ -145,12 +183,11 @@ class InvitationSerializer(serializers.ModelSerializer):
         branch = validated_data["branch"]
         organization = branch.organization
 
-        # Create an invitation relation
         relation = Relation.objects.create(
             user=user,
             branch=branch,
             organization=organization,
-            user_role=validated_data.get("user_role", UserRole.WORKER),
+            user_role=validated_data["user_role"],
             relation_type=RelationType.INVITATION_TO_USER,
         )
 
@@ -158,21 +195,15 @@ class InvitationSerializer(serializers.ModelSerializer):
 
 
 class RelationResponseSerializer(serializers.Serializer):
-    """
-    Serializer for responding to invitations or join requests
-    """
-
     accept = serializers.BooleanField()
 
     def update(self, instance, validated_data):
         accept = validated_data.get("accept")
 
         if accept:
-            # Convert to a full relation
             instance.relation_type = RelationType.RELATION
             instance.save()
             return instance
         else:
-            # Delete the relation if rejected
             instance.delete()
             return None

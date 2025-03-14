@@ -9,7 +9,6 @@ from django.core.validators import FileExtensionValidator
 
 # ~~~~~~~~~~~~~~~~~~~~ USER ~~~~~~~~~~~~~~~~~~~~
 def avatar_upload_path(instance, filename):
-    # Generate unique filename for avatar
     ext = filename.split(".")[-1]
     new_filename = f"{instance.uuid}.{ext}"
     return os.path.join("avatars", new_filename)

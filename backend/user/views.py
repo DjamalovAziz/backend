@@ -1,3 +1,5 @@
+# backend\user\views.py:
+
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -34,12 +36,10 @@ class UserViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
     def register(self, request):
-        """Регистрация нового пользователя"""
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Генерируем токены для нового пользователя
         refresh = RefreshToken.for_user(user)
 
         response_data = {
@@ -52,14 +52,12 @@ class UserViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def public_list(self, request):
-        """Получение списка пользователей (базовая публичная информация)"""
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"], permission_classes=[AllowAny])
     def public_profile(self, request, pk=None):
-        """Получение публичной информации о конкретном пользователе"""
         try:
             user = User.objects.get(pk=pk)
             serializer = UserSerializer(user)
@@ -71,13 +69,11 @@ class UserViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def profile(self, request):
-        """Получение полного профиля текущего пользователя"""
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
     @action(detail=False, methods=["patch"], permission_classes=[IsAuthenticated])
     def update_profile(self, request):
-        """Обновление данных текущего пользователя"""
         serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -85,7 +81,6 @@ class UserViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def change_password(self, request):
-        """Изменение пароля текущего пользователя"""
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -110,7 +105,6 @@ class UserViewSet(viewsets.GenericViewSet):
 
     @action(detail=False, methods=["delete"], permission_classes=[IsAuthenticated])
     def remove_avatar(self, request):
-        """Удаление аватара текущего пользователя"""
         user = request.user
         if user.avatar:
             user.avatar.delete(save=True)

@@ -16,6 +16,7 @@ DOING:
 
 
 TODO:
+    Обмен сообщениями между пользователями(chat, group, channel)
     Push Notifications(Cross-platform)
     Интернационализация и локализация
     Админ-панель Jet

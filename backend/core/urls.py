@@ -20,23 +20,19 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/user/", include("user.urls")),
-    path("api/organization/", include("organization.urls")),
-    path("api/message/", include("message.urls")),
-    # Схема OpenAPI
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    # Документация Swagger
+    path("api/", include("user.urls")),
+    path("api/", include("organization.urls")),
+    path("api/", include("message.urls")),
+    #
+    path("spectacular-download/", SpectacularAPIView.as_view(), name="schema"),
     path(
-        "api/docs/",
+        "spectacular-swagger/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
-    # Альтернативная документация Redoc
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-    # RapiDoc UI
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("spectacular-redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     path(
-        "api/rapidoc/",
+        "spectacular-rapidoc/",
         TemplateView.as_view(
             template_name="rapidoc.html", extra_context={"schema_url": "schema"}
         ),

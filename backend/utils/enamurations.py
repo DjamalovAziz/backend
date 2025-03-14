@@ -1,4 +1,4 @@
-# backend\core\common.py:
+# backend\utils\enamurations.py:
 
 from django.db import models
 

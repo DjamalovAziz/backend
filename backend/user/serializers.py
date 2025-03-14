@@ -72,10 +72,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        # The default result (access/refresh tokens)
         data = super().validate(attrs)
 
-        # Add custom claims
         data.update({"user": UserSerializer(self.user).data})
 
         return data
@@ -92,7 +90,7 @@ class ChangePasswordSerializer(serializers.Serializer):
                 {"new_password": "Password fields didn't match."}
             )
         return attrs
-
+    
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(required=False, allow_null=True)
@@ -106,4 +104,4 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "last_name",
             "phone_number",
             "avatar",
-        )  # Only allow updating these fields
+        )

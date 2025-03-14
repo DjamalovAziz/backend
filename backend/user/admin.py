@@ -1,13 +1,10 @@
 # backend\user\admin.py:
 
+# backend/user/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
-
-#
 from .models import User
-
-# ~~~~~~~~~~~~~~~~~~~~ USER ~~~~~~~~~~~~~~~~~~~~
 
 
 class CustomUserAdmin(UserAdmin):
@@ -24,10 +21,11 @@ class CustomUserAdmin(UserAdmin):
     ordering = ("email", "username")
 
     def avatar_preview(self, obj):
-        if obj.avatar:
+        avatar_url = obj.get_avatar_url()
+        if avatar_url:
             return format_html(
-                '<img src="{}" width="50" height="50" style="border-radius: 50%;" />',
-                obj.avatar.url,
+                '<img src="{}" width="10" height="10" style="border-radius: 100%;" />',
+                avatar_url,
             )
         return format_html("<span>No Avatar</span>")
 
