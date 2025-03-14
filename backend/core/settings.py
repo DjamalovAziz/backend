@@ -74,7 +74,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     "drf_spectacular",
+    'channels',
     #
+    'chat',
     "message",
     "organization",
     "user",
@@ -113,6 +115,16 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = "core.wsgi.application"
+
+# Установка ASGI приложения
+ASGI_APPLICATION = 'core.asgi.application'
+
+# Настройка каналов (в простейшем случае используем in-memory backend)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 
 # Database

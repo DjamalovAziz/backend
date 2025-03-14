@@ -1,38 +1,77 @@
 Plan:
+    User:
+        reset password:
+            Telegram bot
+            Email
+            SMS
+        DONE change my password
+        DONE get:
+            DONE me
+            DONE users
+            DONE user
+        DONE patch me
+        DONE signup
+        DONE signin
+        DONE refresh token
+        DONE delete me
+        DOING chat(WS):
+            DOING chat
+            DOING group
+            DOING channel
+    
+    DONE Logging
+    DOING Permissions
 
-DONE:
-    Базовые (конфигурации, CRUD)
-    Управление пользователями
-    Аутентификация и безопасность
+    DONE Organization:
+        DONE get:
+            DONE organizations
+            DONE organization
+        DONE patch organization
+        DONE delete organization
+        DONE post organization
 
+    Branch:
+        DONE get:
+            DONE branch
+            DONE branchs
+        DONE patch branch
+        DONE delete branch
+        DONE post branch
 
-DOING:
-    Хорошая базовая бизнеслогика
-    Телеграм бот
-    Email Notifications
-    Документация API и его спецификация
-    Асинхронная обработка задач
-    Интеграция внешних сервисов
+    Relation:
+        DONE get:
+            DONE relations
+            DONE Relation
+        DONE patch:
+            DONE change role
+            DONE change relation type
+        DONE delete relation
 
+    DONE API documentation:
+        DONE drf-yasg
+        DONE drf-spectacular
 
-TODO:
-    Обмен сообщениями между пользователями(chat, group, channel)
-    Push Notifications(Cross-platform)
+    Docker:
+        DONE basic
+
+    Push Notifications:
+        IOS
+        Android
+        Browser
     Интернационализация и локализация
-    Админ-панель Jet
-    Работа с транзакциями
-    Оптимизация с Redis
-    API Versioning
-    Middleware
-    Django Guardian
-    Качество и отладка
-    Интеграция с платежной системой
-    Обеспечение безопасности приложения
-    Реал-тайм функциональность
-    Интеграция с NoSQL
-    Интеграция с Elasticsearch
-    Docker и контейнеризация
-    CI/CD Basics
+    Jet
+    Интеграция с:
+        click
+        payme
+    Кеширование:
+        redis
+    CyberSecurity:
+        Basic
+    Deploy to server
+
+    CI/CD:
+        githab actions
+        auto testing
+
     Микросервисы с gRPC
     GraphQL
-    WS

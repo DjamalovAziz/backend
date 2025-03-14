@@ -23,6 +23,7 @@ urlpatterns = [
     path("api/", include("user.urls")),
     path("api/", include("organization.urls")),
     path("api/", include("message.urls")),
+    path("api/", include("chat.urls")),
     #
     path("spectacular-download/", SpectacularAPIView.as_view(), name="schema"),
     path(

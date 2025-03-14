@@ -7,6 +7,7 @@ asgiref==3.8.1
 attrs==25.1.0
 black==25.1.0
 certifi==2025.1.31
+channels==4.2.0
 charset-normalizer==3.4.1
 click==8.1.8
 colorama==0.4.6

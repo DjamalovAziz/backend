@@ -26,16 +26,22 @@ class UserViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action == "register":
+        if self.action == "signup":
             return UserCreateSerializer
         elif self.action == "update_profile":
             return UserUpdateSerializer
         elif self.action == "change_password":
             return ChangePasswordSerializer
         return UserSerializer
+    
+    @action(detail=False, methods=["delete"], permission_classes=[IsAuthenticated])
+    def delete_me(self, request):
+        user = request.user
+        user.delete()
+        return Response({"message": "Account successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["post"], permission_classes=[AllowAny])
-    def register(self, request):
+    def signup(self, request):
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -51,13 +57,13 @@ class UserViewSet(viewsets.GenericViewSet):
         return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
-    def public_list(self, request):
+    def get_users(self, request):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"], permission_classes=[AllowAny])
-    def public_profile(self, request, pk=None):
+    def get_user(self, request, pk=None):
         try:
             user = User.objects.get(pk=pk)
             serializer = UserSerializer(user)
@@ -68,12 +74,12 @@ class UserViewSet(viewsets.GenericViewSet):
             )
 
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
-    def profile(self, request):
+    def get_me(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
     @action(detail=False, methods=["patch"], permission_classes=[IsAuthenticated])
-    def update_profile(self, request):
+    def patch_me(self, request):
         serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -87,7 +93,7 @@ class UserViewSet(viewsets.GenericViewSet):
         user = request.user
         if not user.check_password(serializer.validated_data["old_password"]):
             return Response(
-                {"old_password": ["Неверный пароль."]},
+                {"old_password": ["Uncorrect password."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -97,7 +103,7 @@ class UserViewSet(viewsets.GenericViewSet):
         refresh = RefreshToken.for_user(user)
         return Response(
             {
-                "message": "Пароль успешно изменен.",
+                "message": "Password successfully changed.",
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             }
@@ -108,7 +114,7 @@ class UserViewSet(viewsets.GenericViewSet):
         user = request.user
         if user.avatar:
             user.avatar.delete(save=True)
-            return Response({"message": "Аватар успешно удален."})
+            return Response({"message": "Avatar successfully deleted."})
         return Response(
             {"message": "Нет аватара для удаления."}, status=status.HTTP_400_BAD_REQUEST
         )

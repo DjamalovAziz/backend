@@ -9,7 +9,7 @@ db.sqlite3
 draft.txt
 code.py
 plan.md
-
+todo.todo
 
 __pycache__/
 *_initial.py
