@@ -27,12 +27,11 @@ def extract_content_between_markers(file_path, start_marker, end_marker):
 
 def process_directory():
     """Обрабатывает директорию для извлечения блоков кода между маркерами."""
-    # Конфигурация для этой функции
     config = {
-        "directory_to_scan": "./backend",  # Директория для сканирования
-        "start_marker": "# backend\\user",  # Начальный маркер
-        "end_marker": "$",  # Конечный маркер
-        "output_file": "code.py",  # Файл для записи результата
+        "directory_to_scan": "./backend",
+        "start_marker": "# backend\\user",
+        "end_marker": "$",
+        "output_file": "code.py",
     }
 
     extracted_data = []
@@ -74,7 +73,6 @@ def process_directory():
 
 def add_file_path_comments():
     """Добавляет комментарии с путями к файлам в целевых директориях."""
-    # Конфигурация для этой функции
     config = {
         "root_dir": ".",  # Корневая директория
         "target_dirs": {"backend"},  # Целевые директории для обработки

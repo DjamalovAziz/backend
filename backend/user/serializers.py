@@ -5,9 +5,8 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 #
-from .models import User
+from .models import Avatar, User
 
-# ~~~~~~~~~~~~~~~~~~~~ USER ~~~~~~~~~~~~~~~~~~~~
 
 User = get_user_model()
 
@@ -29,7 +28,10 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ("uuid", "avatar_url")
 
     def get_avatar_url(self, obj):
-        return obj.get_avatar_url()
+        if hasattr(obj, "avatar") and obj.avatar:
+            return obj.get_avatar_url()
+        # For Multiple Avatar scenario, get primary avatar
+        return obj.get_primary_avatar_url()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -90,7 +92,31 @@ class ChangePasswordSerializer(serializers.Serializer):
                 {"new_password": "Password fields didn't match."}
             )
         return attrs
-    
+
+
+class AvatarSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Avatar
+        fields = ("uuid", "image_url", "is_primary", "created_at")
+        read_only_fields = ("uuid", "image_url", "created_at")
+
+    def get_image_url(self, obj):
+        return obj.image.url if obj.image else None
+
+
+class AvatarCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Avatar
+        fields = ("image", "is_primary")
+
+
+class AvatarUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Avatar
+        fields = ("image", "is_primary")
+
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(required=False, allow_null=True)

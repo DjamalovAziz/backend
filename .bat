@@ -20,9 +20,11 @@ python manage.py makemigrations
 
 python manage.py migrate
 
-python manage.py runserver
+@REM python manage.py runserver
 
-@REM uvicorn core.asgi:application --host 0.0.0.0 --port 8000
+uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --reload
+
+@REM daphne -b 127.0.0.1 -p 8000 core.asgi:application
 
 popd
 

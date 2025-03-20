@@ -2,13 +2,12 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ChannelViewSet, GroupViewSet, MessageViewSet
+from . import views
 
 router = DefaultRouter()
-router.register('channels', ChannelViewSet, basename='channels')
-router.register('groups', GroupViewSet, basename='groups')
-router.register('messages', MessageViewSet, basename='messages')
+router.register(r"personal", views.PersonalChatViewSet, basename="personal-chat")
+router.register(r"groups", views.GroupChatViewSet, basename="group-chat")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

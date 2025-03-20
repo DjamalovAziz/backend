@@ -18,11 +18,15 @@ from pathlib import Path
 import os
 from datetime import timedelta
 
-
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Avatar configuration
+AVATAR_MULTIPLE_MODE = os.getenv("AVATAR_MULTIPLE_MODE") == "True"
+AVATAR_MAX_COUNT = int(os.getenv("AVATAR_MAX_COUNT"))
+AVATAR_DEFAULT_PATH = "media/avatars/default/PROFILE.jpg"
 
 # Email configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -62,6 +66,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -74,9 +79,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     "drf_spectacular",
-    'channels',
+    "channels",
     #
-    'chat',
+    "chat",
     "message",
     "organization",
     "user",
@@ -116,13 +121,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# Установка ASGI приложения
-ASGI_APPLICATION = 'core.asgi.application'
+ASGI_APPLICATION = "core.asgi.application"
 
-# Настройка каналов (в простейшем случае используем in-memory backend)
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        # В продакшене рекомендуется использовать Redis:
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
     },
 }
 
@@ -203,6 +211,8 @@ AUTH_USER_MODEL = "user.User"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -280,11 +290,11 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {
-            "handlers": ["console", "file"],
-            "level": "INFO",
-            "propagate": False,
-        },
+        # "django": {
+        #     "handlers": ["console", "file"],
+        #     "level": "INFO",
+        #     "propagate": False,
+        # },
         "django.server": {
             "handlers": [],
             "level": "WARNING",
@@ -294,6 +304,14 @@ LOGGING = {
             "handlers": ["mail_admins"],
             "level": "ERROR",
             "propagate": False,
+        },
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "channels": {
+            "handlers": ["console"],
+            "level": "DEBUG",
         },
     },
 }

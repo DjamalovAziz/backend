@@ -6,7 +6,8 @@
 \media
 .env
 db.sqlite3
-draft.txt
+draft.md
+PROFILE.jpg
 code.py
 plan.md
 todo.todo
